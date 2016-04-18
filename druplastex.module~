@@ -1,0 +1,74 @@
+<?php
+
+function druplastex_perm() {
+
+return array('access druplastex', 'create druplastex', 'administer druplastex');
+
+}
+
+
+
+
+function druplastex_filter($op, $delta = 0, $format = -1, $text = '') {
+ 
+  switch ($op) {
+  case 'list':
+    return array(0 => t('Maths rendering filter module'));
+
+  case 'description':
+    return t('Allows users to insert Maths easily');
+
+  case 'prepare': 
+    return $text;
+
+  case "process":
+    $text=_druplastex_process_text($text);
+    return $text;
+
+  default:
+    return $text;
+  }
+
+}
+
+function _druplastex_process_text($text) {
+  
+  $dir="/www/plus/html/MI/";
+  $imgbaseurl="/MI/";
+
+  if (preg_match_all('/\[maths\](.*)\[\/maths\]/sU', $text, $match)) {
+
+    $hits=count($match[0]);
+    for ($i=0;$i<$hits;$i++) {
+      $tex=$match[1][$i];
+      $tex=str_replace('\$','$',$tex);
+      $tex=str_replace('&lt;','<',$tex);//fix broken imports
+      $tex=str_replace('&gt;','>',$tex);//fix broken imports
+      $tex=str_replace('&amp;','&',$tex);//fix broken imports
+      $tex ='\documentclass[10pt]{article}\textwidth 6.5in\begin{document}' . $tex . '\end{document}';
+      $md5=md5($tex);
+      $cachecheck=$dir.$md5.".md5";
+
+      if (!file_exists($cachecheck)) {
+
+	$tmpfname = tempnam("/tmp", "Plus");
+	$handle = fopen($tmpfname, "w");
+	fwrite($handle, $tex);
+	fclose($handle);
+	chmod($tmpfname, 0644);
+	$cmd = "export PATH=$PATH:/usr/local/bin/; /usr/local/bin/plastex  --dir=".$dir.$md5."/ --image-base-url=".$imgbaseurl.$md5."/  --theme=minimal --no-theme-extras ".$tmpfname." ";
+	exec($cmd);
+	unlink($tmpfname);
+	if (!touch($cachecheck)) {
+	  echo "error";
+	}
+      }
+      $replace=file_get_contents($dir.$md5."/index.html");
+
+      $text=str_replace($match[0][$i],$replace,$text);
+    }
+  }
+
+
+  return $text;
+}
