@@ -1,4 +1,6 @@
 ; $Id$
 name = "Drupal Plastex Math module"
 description = "Renders TeX using the Plastex Python package http://plastex.sourceforge.net/"
-core = 6.x
+core = 7.x
+package = Maths Rendering
+version = 7.x-1

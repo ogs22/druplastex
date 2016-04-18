@@ -1,12 +1,39 @@
 <?php
 
 function druplastex_perm() {
-
-return array('access druplastex', 'create druplastex', 'administer druplastex');
-
+    return array('access druplastex', 'create druplastex', 'administer druplastex');
 }
 
 
+function druplastex_filter_info() {
+  $filters['druplastex_filter'] = array(
+    'title' => t('Drupal Plastex filter'), 
+    'description' => t('Turns maths in to html maths'),
+    'cache' => TRUE, 
+    'process callback' => 'druplastex_substitute',
+    'tips callback' => 'druplastex_filter_tips'
+  );
+
+  return $filters;
+}
+
+function druplastex_filter_tips($filter, $format, $long) {
+  if ($long) {
+    return t('You may link to uploaded images within the current node using the wysiwyg editor toolbar icons.
+      The Custom Inline Filter is to replace added image placeholders with uploaded inline images.'
+    );
+  }
+  else {
+    return t('Use the wysiwyg editor toolbar icons to display uploaded images inline.');
+  }
+}
+
+
+
+function druplastex_substitute($text, $filter, $format, $langcode, $cache, $cache_id) {
+    $text=_druplastex_process_text($text);
+    return $text;
+}
 
 
 function druplastex_filter($op, $delta = 0, $format = -1, $text = '') {
@@ -57,9 +84,11 @@ function _druplastex_process_text($text) {
 	fwrite($handle, $tex);
 	fclose($handle);
 	chmod($tmpfname, 0644);
-	$cmd = "export PATH=$PATH:/usr/local/bin/; /usr/local/bin/plastex  --dir=".$dir.$md5."/ --image-base-url=".$imgbaseurl.$md5."/  --theme=minimal --no-theme-extras ".$tmpfname." ";
-	exec($cmd);
-	unlink($tmpfname);
+        watchdog(WATCHDOG_ERROR, $tex);
+	$cmd = "export PATH=\$PATH:/usr/local/bin/; /usr/local/bin/plastex  --dir=".$dir.$md5."/ --image-base-url=".$imgbaseurl.$md5."/  --theme=minimal --no-theme-extras ".$tmpfname." ";
+	watchdog(WATCHDOG_ERROR, $cmd);
+        exec($cmd);
+	//unlink($tmpfname);
 	if (!touch($cachecheck)) {
 	  echo "error";
 	}
@@ -72,4 +101,21 @@ function _druplastex_process_text($text) {
 
 
   return $text;
+}
+
+
+function druplastex_install() {
+  db_update('system')
+    ->fields(array('weight' => 999))
+    ->condition('name', 'druplastex', '=')
+    ->execute();
+}
+
+
+
+function druplastex_update_7100() {
+  db_update('system')
+    ->fields(array('weight' => 999))
+    ->condition('name', 'druplastex', '=')
+    ->execute();
 }
