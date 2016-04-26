@@ -84,9 +84,9 @@ function _druplastex_process_text($text) {
 	fwrite($handle, $tex);
 	fclose($handle);
 	chmod($tmpfname, 0644);
-        watchdog(WATCHDOG_ERROR, $tex);
+        //watchdog(WATCHDOG_ERROR, $tex);
 	$cmd = "export PATH=\$PATH:/usr/local/bin/; /usr/local/bin/plastex  --dir=".$dir.$md5."/ --image-base-url=".$imgbaseurl.$md5."/  --theme=minimal --no-theme-extras ".$tmpfname." ";
-	watchdog(WATCHDOG_ERROR, $cmd);
+	//watchdog(WATCHDOG_ERROR, $cmd);
         exec($cmd);
 	//unlink($tmpfname);
 	if (!touch($cachecheck)) {
